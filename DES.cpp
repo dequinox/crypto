@@ -50,12 +50,10 @@ void DES::initialise_subkeys()
 {
     std::bitset<56> K;
 
-    std::cout << key << std::endl;
     for (unsigned i = 0; i < 56; i++)
     {
-        K[i] = key[56 - (PC_1[i] - 1)];
+        K[i] = key[63 - (PC_1[i] - 1)];
     }
 
     std::cout << K << std::endl;
-
 }
