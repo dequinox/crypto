@@ -20,10 +20,13 @@ class DES
 		std::bitset<64> final_permutation(std::bitset<64> _data);
 
 	private:
-		std::bitset<64> string2key(std::string _str);
+		std::bitset<64> hex2key(std::string _str);
+		std::string key2hex(std::bitset<64> _data);
 		const std::string hex2bin(char _c) const;
+		const char bin2hex(unsigned num) const;
 		std::bitset<28> left_shift(std::bitset<28> _key, unsigned _index);
 		std::bitset<64> encode(std::bitset<64> _data);
+		std::bitset<64> decode(std::bitset<64> _data);
 		std::bitset<32> F(std::bitset<32> _data, std::bitset<48> _key);
 	
 	private:
