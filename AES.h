@@ -19,19 +19,20 @@ class AES
         std::string decrypt(std::string _data);
 
     private:
-        std::byte* cipher(std::byte in[]);
+        void cipher(std::byte in[], std::byte out[]);
+
     private:
-        void add_round_key();
-        void inv_mix_columns();
-        void inv_shift_rows();
-        void inv_sub_bytes();
-        void mix_columns();
+        void add_round_key(std::byte** state);
+        void inv_mix_columns(std::byte** state);
+        void inv_shift_rows(std::byte** state);
+        void inv_sub_bytes(std::byte** state);
+        void mix_columns(std::byte** state);
 
     private:
         void rot_word();
-        void shift_rows();
-        void sub_bytes();
-        void sub_word();
+        void shift_rows(std::byte** state);
+        void sub_bytes(std::byte** state);
+        void sub_word(std::byte** state);
 
     private:
         unsigned key_length;
