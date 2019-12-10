@@ -10,31 +10,40 @@ std::string AES::decrypt(std::string _data)
 
 void AES::cipher(unsigned char in[], unsigned char out[])
 {
-    unsigned char **state = new std::byte *[4];
+    unsigned char **state = new unsigned char *[4];
+    unsigned char **key = new unsigned char *[number_of_rounds + 1];
     for (unsigned  i = 0; i < 4; i++)
         state[i] = new unsigned char[block_size];
+
+    for (unsigned round = 0; round <= number_of_rounds; round++)
+        key[round] = new unsigned char[4 * block_size];
 
     for (unsigned col = 0; col < block_size; col++)
         for (unsigned row = 0; row < 4; row++)
             state[row][col] = in[row + col * 4];
     
-    add_round_key(state);
+    add_round_key(state, key[0]);
 
-    for (unsigned round = 0; round < number_of_rounds - 1; round++)
+    for (unsigned round = 1; round <= number_of_rounds - 1; round++)
     {
         sub_bytes(state);
         shift_rows(state);
         mix_columns(state);
-        add_round_key(state);
+        add_round_key(state, key[round]);
     }
 
     sub_bytes(state);
     shift_rows(state);
-    add_round_key(state);
+    add_round_key(state, key[number_of_rounds]);
 
     for (unsigned i = 0; i < 4; i++)
         delete[] state[i];
+    
+    for (unsigned round = 0; round <= number_of_rounds; round++)
+        delete[] key[round];
+    
     delete[] state;
+    delete[] key;
 
 }
 
@@ -80,7 +89,7 @@ unsigned char xtime(unsigned char x)
     }
     else 
         x = x << 1;
-        
+
     return x;
 }
 
@@ -98,4 +107,11 @@ unsigned char AES::multiply(unsigned char a, unsigned char b)
     }
 
     return result;
+}
+
+void AES::add_round_key(unsigned char** state, unsigned char* key)
+{
+    for (unsigned row = 0; row < 4; row++)
+        for (unsigned col = 0; col < block_size; col++)
+            state[row][col] ^= key[row + col * 4];
 }

@@ -22,7 +22,7 @@ class AES
         void cipher(unsigned char in[], unsigned char out[]);
 
     private:
-        void add_round_key(unsigned char** state);
+        void add_round_key(unsigned char** state, unsigned char* key);
         void inv_mix_columns(unsigned char** state);
         void inv_shift_rows(unsigned char** state);
         void inv_sub_bytes(unsigned char** state);
