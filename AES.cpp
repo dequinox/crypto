@@ -37,3 +37,13 @@ void AES::cipher(std::byte in[], std::byte out[])
     delete[] state;
 
 }
+
+void AES::sub_bytes(std::byte **state)
+{
+    for (unsigned col = 0; col < block_size; col++)
+        for (unsigned row = 0; row < 4; row++)
+        {
+            std::byte num = state[row][col];
+            state[row][col] = Sbox[(int)num / 16][(int)num % 16];
+        }
+}
