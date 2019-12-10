@@ -47,3 +47,10 @@ void AES::sub_bytes(std::byte **state)
             state[row][col] = Sbox[(int)num / 16][(int)num % 16];
         }
 }
+
+void AES::shift_rows(std::byte **state)
+{
+    for (unsigned row = 1; row < 4; row++)
+        for (unsigned col = 0; col + row < block_size; col++)
+            swap(state[row][col], state[row][col + row]);
+}
