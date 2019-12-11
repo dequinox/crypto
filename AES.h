@@ -19,7 +19,8 @@ class AES
         std::string decrypt(std::string _data);
 
     private:
-        void cipher(unsigned char in[], unsigned char out[]);
+        void cipher(unsigned char in[], unsigned char out[], unsigned char key[]);
+        void generate_keys(unsigned char* w, unsigned char *key);
 
     private:
         void add_round_key(unsigned char** state, unsigned char* key);
@@ -29,10 +30,11 @@ class AES
         unsigned char multiply(unsigned char a, unsigned char b);
 
     private:
-        void rot_word();
+        void rot_word(unsigned char *word);
+        void sub_word(unsigned char *word);
+        void rcon(unsigned char* Rcon, unsigned n);
         void shift_rows(unsigned char** state);
         void sub_bytes(unsigned char** state);
-        void sub_word(unsigned char** state);
         void mix_columns(unsigned char** state);
 
     private:
