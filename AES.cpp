@@ -2,42 +2,48 @@
 #include <iostream>
 #include <iomanip>
 
-unsigned char* AES::encrypt(unsigned char in[], unsigned char key[], int length)
-{
-    unsigned output_length = (((length - 1) / 16) + 1) * 16;  
-    unsigned char *out = new unsigned char[output_length];
+unsigned char* AES::encrypt(unsigned char in[], unsigned int length, unsigned int& output_length)
+{  
+    output_length = (((length - 1) / 16) + 1) * 16; 
+    unsigned char *out = new unsigned char[output_length];  
     unsigned char chunk[16];
 
     for (unsigned i = 0; i < length; i += 16)
     {
         for (unsigned j = 0; j < 16; j++)
         {
+            chunk[j] = 0;
             if (i + j < length)
                 chunk[j] = in[i + j];
-            else 
-                chunk[j] = 0;
         }
         
-        cipher(chunk, out + i, key);
+        cipher(chunk, out + i);
     }
 
     return out;
 }
 
-unsigned char* AES::decrypt(unsigned char in[], unsigned char key[], int length)
+unsigned char* AES::decrypt(unsigned char in[], unsigned int length)
 {  
+    unsigned char *out = new unsigned char[length];  
     unsigned char chunk[16];
-    unsigned char *out = new unsigned char[length];
 
     for (unsigned i = 0; i < length; i += 16)
     {
         for (unsigned j = 0; j < 16; j++)
+        {
             chunk[j] = in[i + j];
+        }
         
-        cipher(chunk, out + i, key);
+        decipher(chunk, out + i);
     }
 
     return out;
+}
+
+AES::AES()
+{
+    AES(AES_128);
 }
 
 AES::AES(Standard st)
@@ -64,24 +70,45 @@ AES::AES(Standard st)
             key_length = 4;
             number_of_rounds = 10;
     }
+
+    w = new unsigned char [(number_of_rounds + 1) * block_size * 4];
+}
+
+AES::~AES()
+{
+    delete[] w;
+}
+
+void AES::set_key(unsigned char key[])
+{
+    generate_keys(key);
 }
 
 void print(unsigned char **state)
 {
-    for (unsigned i = 0; i < 4; i++)
+    for (unsigned col = 0; col < 4; col++)
     {
-        for (unsigned j = 0; j < 4; j++)
+        for (unsigned row = 0; row < 4; row++)
         {
-            std::cout << std::setfill('0') << std::setw(2) << std::hex << (0xff & (unsigned int)state[i][j]) << " ";
+            std::cout << std::setfill('0') << std::setw(2) << std::hex << (unsigned int)state[row][col];
         }
-        std::cout << std::endl;
     }
+    std::cout << std::endl;
 }
 
-void AES::cipher(unsigned char in[], unsigned char out[], unsigned char key[])
+void print(unsigned char *state)
+{
+    for (unsigned col = 0; col < 16; col++)
+    {
+            std::cout << std::setfill('0') << std::setw(2) << std::hex << (unsigned int)state[col];
+    }
+    std::cout << std::endl;
+}
+
+
+void AES::cipher(unsigned char in[], unsigned char out[])
 {
     unsigned char **state = new unsigned char *[4];
-    unsigned char *w = new unsigned char [4 * block_size * (number_of_rounds + 1)];
     for (unsigned  i = 0; i < 4; i++)
         state[i] = new unsigned char[block_size];
 
@@ -89,8 +116,6 @@ void AES::cipher(unsigned char in[], unsigned char out[], unsigned char key[])
         for (unsigned row = 0; row < 4; row++)
             state[row][col] = in[row + col * 4];
 
-
-    generate_keys(w, key);
     add_round_key(state, w);
 
     for (unsigned round = 1; round <= number_of_rounds - 1; round++)
@@ -113,24 +138,19 @@ void AES::cipher(unsigned char in[], unsigned char out[], unsigned char key[])
         delete[] state[i];
         
     delete[] state;
-    delete[] w;
-
 }
 
-void AES::inverse_cypher(unsigned char in[], unsigned char out[], unsigned char key[])
+void AES::decipher(unsigned char in[], unsigned char out[])
 {
     unsigned char **state = new unsigned char *[4];
-    unsigned char *w = new unsigned char [4 * block_size * (number_of_rounds + 1)];
     for (unsigned  i = 0; i < 4; i++)
         state[i] = new unsigned char[block_size];
 
     for (unsigned col = 0; col < block_size; col++)
         for (unsigned row = 0; row < 4; row++)
             state[row][col] = in[row + col * 4];
-
-
-    generate_keys(w, key);
-    add_round_key(state, w + number_of_rounds * block_size);
+    
+    add_round_key(state, w + number_of_rounds * block_size * 4);
 
     for (unsigned round = number_of_rounds - 1; round >= 1; round--)
     {
@@ -152,10 +172,7 @@ void AES::inverse_cypher(unsigned char in[], unsigned char out[], unsigned char 
         delete[] state[i];
         
     delete[] state;
-    delete[] w;
 }
-
-
 
 void AES::sub_bytes(unsigned char **state)
 {
@@ -165,6 +182,33 @@ void AES::sub_bytes(unsigned char **state)
             unsigned char num = state[row][col];
             state[row][col] = Sbox[num / 16][num % 16];
         }
+}
+
+void AES::inv_sub_bytes(unsigned char **state)
+{
+    for (unsigned col = 0; col < block_size; col++)
+        for (unsigned row = 0; row < 4; row++)
+        {
+            unsigned char num = state[row][col];
+            state[row][col] = InvSbox[num / 16][num % 16];
+        }
+}
+
+void AES::inv_shift_rows(unsigned char **state)
+{
+    unsigned char temp[block_size];
+    for (unsigned row = 1; row < 4; row++)
+    {
+        for (unsigned col = 0; col < block_size; col++)
+        {
+            temp[col] = state[row][col];
+        }
+        for (unsigned col = 0; col < block_size; col++)
+        {
+            unsigned pos = (col >= row) ? col - row : col + block_size - row;
+            state[row][col] = temp[pos];
+        }
+    }
 }
 
 void AES::shift_rows(unsigned char **state)
@@ -196,6 +240,22 @@ void AES::mix_columns(unsigned char **state)
         state[1][col] = s0c ^ multiply(0x02, s1c) ^ multiply(0x03, s2c) ^ s3c;
         state[2][col] = s0c ^ s1c ^ multiply(0x02, s2c) ^ multiply(0x03, s3c);
         state[3][col] = multiply(0x03, s0c) ^ s1c ^ s2c ^ multiply(0x02, s3c); 
+    }
+}
+
+void AES::inv_mix_columns(unsigned char **state)
+{
+    for (unsigned col = 0; col < block_size; col++)
+    {
+        unsigned char s0c = state[0][col]; 
+        unsigned char s1c = state[1][col];  
+        unsigned char s2c = state[2][col];
+        unsigned char s3c = state[3][col];
+
+        state[0][col] = multiply(0x0e, s0c) ^ multiply(0x0b, s1c) ^ multiply(0x0d, s2c) ^ multiply(0x09, s3c);
+        state[1][col] = multiply(0x09, s0c) ^ multiply(0x0e, s1c) ^ multiply(0x0b, s2c) ^ multiply(0x0d, s3c);
+        state[2][col] = multiply(0x0d, s0c) ^ multiply(0x09, s1c) ^ multiply(0x0e, s2c) ^ multiply(0x0b, s3c);
+        state[3][col] = multiply(0x0b, s0c) ^ multiply(0x0d, s1c) ^ multiply(0x09, s2c) ^ multiply(0x0e, s3c); 
     }
 }
 
@@ -236,15 +296,7 @@ void AES::add_round_key(unsigned char** state, unsigned char* key)
             state[row][col] ^= key[row + col * 4];
 }
 
-void print(unsigned char* temp)
-{
-    std::cout << std::setfill('0') << std::setw(2) << std::hex << (0xff & (unsigned int)temp[0]) 
-                << std::setfill('0') << std::setw(2) << (0xff & (unsigned int)temp[1]) 
-                  << std::setfill('0') << std::setw(2) << (0xff & (unsigned int)temp[2]) 
-                 << std::setfill('0') << std::setw(2) << (0xff & (unsigned int)temp[3]) << " "; 
-}
-
-void AES::generate_keys(unsigned char* w, unsigned char *key)
+void AES::generate_keys(unsigned char *key)
 {
     unsigned i = 0;
     unsigned char* Rcon = new unsigned char[4];
