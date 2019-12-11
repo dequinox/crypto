@@ -13,14 +13,16 @@ class AES
 {
     public:
         AES();
+        AES(Standard st);
 
     public:
-        std::string encrypt(std::string _data);
-        std::string decrypt(std::string _data);
+        unsigned char* encrypt(unsigned char in[], unsigned char key[], int length);
+        unsigned char* decrypt(unsigned char in[], unsigned char key[], int length);
 
     private:
-        void cipher(unsigned char in[], unsigned char out[], unsigned char key[]);
         void generate_keys(unsigned char* w, unsigned char *key);
+        void cipher(unsigned char in[], unsigned char out[], unsigned char key[]);
+        void inverse_cypher(unsigned char in[], unsigned char out[], unsigned char key[]);
 
     private:
         void add_round_key(unsigned char** state, unsigned char* key);
