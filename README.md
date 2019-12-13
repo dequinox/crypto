@@ -5,10 +5,10 @@
 - [x] RC4
 - [x] DES
 - [x] AES
+- [x] BLOWFISH
 
 ## Todo
 - [ ] IDEA
-- [ ] BLOWFISH
 - [ ] RC6
 - [ ] RSA
 - [ ] Add different block modes
