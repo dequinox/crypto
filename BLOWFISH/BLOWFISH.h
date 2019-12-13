@@ -9,10 +9,12 @@ class BLOWFISH
         BLOWFISH();
     
     public:
-        void set_key(unsigned char key[]);
+        void set_key(unsigned char key[], unsigned key_length);
 
     private:
-        void generate_keys(unsigned char key[]);
+        void generate_keys(unsigned char key[], unsigned key_length);
+        void cipher(unsigned char in[], unsigned char out[]);
+        uint32_t F(uint32_t data);
     
     private:
         uint32_t P[18] = {
@@ -77,7 +79,7 @@ class BLOWFISH
             0xc332ddef,  0xbe6c5aa5,  0x65582185,  0x68ab9802,  0xeecea50f,  0xdb2f953b,  0x2aef7dad,  0x5b6e2f84,  
             0x1521b628,  0x29076170,  0xecdd4775,  0x619f1510,  0x13cca830,  0xeb61bd96,  0x0334fe1e,  0xaa0363cf,  
             0xb5735c90,  0x4c70a239,  0xd59e9e0b,  0xcbaade14,  0xeecc86bc,  0x60622ca7,  0x9cab5cab,  0xb2f3846e,  
-            0x648b1eaf,  0x19bdf0ca,  0xa02369b9,  0x655abb50,  0x40685a32,  0x3c2ab4b3,  0x319ee9d5   0xc021b8f7,  
+            0x648b1eaf,  0x19bdf0ca,  0xa02369b9,  0x655abb50,  0x40685a32,  0x3c2ab4b3,  0x319ee9d5,  0xc021b8f7,  
             0x9b540b19,  0x875fa099,  0x95f7997e,  0x623d7da8,  0xf837889a,  0x97e32d77,  0x11ed935f,  0x16681281,  
             0x0e358829,  0xc7e61fd6,  0x96dedfa1,  0x7858ba99,  0x57f584a5,  0x1b227263,  0x9b83c3ff,  0x1ac24696,  
             0xcdb30aeb,  0x532e3054,  0x8fd948e4,  0x6dbc3128,  0x58ebf2ef,  0x34c6ffea,  0xfe28ed61,  0xee7c3c73,  
@@ -158,7 +160,7 @@ class BLOWFISH
             0x85cbfe4e,  0x8ae88dd8,  0x7aaaf9b0,  0x4cf9aa7e,  0x1948c25c,  0x02fb8a8c,  0x01c36ae4,  0xd6ebe1f9,  
             0x90d4f869,  0xa65cdea0,  0x3f09252d,  0xc208e69f,  0xb74e6132,  0xce77e25b,  0x578fdfe3,  0x3ac372e6  
         }
-    }        
+    };        
 };
 
 #endif /* _BLOWFISH_H */

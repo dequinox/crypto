@@ -1,8 +1,9 @@
 #include <iostream>
 #include <iomanip>
-#include "DES.h"
-#include "AES.h"
-#include "IDEA.h"
+#include "DES/DES.h"
+#include "AES/AES.h"
+#include "IDEA/IDEA.h"
+#include "BLOWFISH/BLOWFISH.h"
 
 using namespace std;
 
@@ -39,6 +40,11 @@ int main()
     }
     std::cout << std::endl;
     */
+
+   unsigned char key2[8] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+
+   BLOWFISH b;
+   b.set_key(key2, 8);
 
     return 0;
 }
