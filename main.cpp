@@ -41,10 +41,22 @@ int main()
     std::cout << std::endl;
     */
 
-   unsigned char key2[8] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
-
+   unsigned char key2[8] = {0xaa, 0xbb, 0x09, 0x18, 0x27, 0x36, 0xcc, 0xdd};
+   unsigned char in3[8] = {0x12, 0x34, 0x56, 0xab, 0xcd, 0x13, 0x25, 0x36};
+   unsigned char in4[8] = {0x8f, 0x62, 0x40, 0x13, 0xda, 0x32, 0x65, 0xea};
    BLOWFISH b;
    b.set_key(key2, 8);
+   unsigned outlen;
+   out = b.encrypt(in3, 8, outlen);
+   out2 = b.decrypt(in4, 8);
+
+    for (int i = 0; i < outlen; i++)
+        std::cout << std::hex << (unsigned int)out[i];
+    std::cout << std::endl;
+
+    for (int i = 0; i < outlen; i++)
+        std::cout << std::hex << (unsigned int)out2[i];
+    std::cout << std::endl;
 
     return 0;
 }

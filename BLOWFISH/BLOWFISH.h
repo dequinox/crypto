@@ -10,10 +10,13 @@ class BLOWFISH
     
     public:
         void set_key(unsigned char key[], unsigned key_length);
+        unsigned char* encrypt(unsigned char in[], unsigned int length, unsigned int& output_length);
+        unsigned char* decrypt(unsigned char in[], unsigned int length);
 
     private:
         void generate_keys(unsigned char key[], unsigned key_length);
         void cipher(unsigned char in[], unsigned char out[]);
+        void decipher(unsigned char in[], unsigned char out[]);
         uint32_t F(uint32_t data);
     
     private:
