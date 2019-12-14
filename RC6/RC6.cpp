@@ -61,6 +61,26 @@ uint32_t RC6::rotate_left(uint32_t a, uint32_t b)
     return (a << b) | (a >> (w - b));
 }
 
+uint32_t LOAD32(unsigned char key[])
+{
+    uint32_t a = key[0];
+    uint32_t b = key[1];
+    uint32_t c = key[2];
+    uint32_t d = key[3];
+
+    return (a << 24) | (b << 16) | (c << 8) | (d);
+}
+
+uint32_t LOAD32BE(unsigned char key[])
+{
+    uint32_t a = key[0];
+    uint32_t b = key[1];
+    uint32_t c = key[2];
+    uint32_t d = key[3];
+
+    return (d << 24) | (c << 16) | (b << 8) | (a);
+}
+
 void RC6::generate_keys(unsigned char key[], unsigned key_length)
 {
     unsigned c = key_length / 4;
@@ -69,7 +89,7 @@ void RC6::generate_keys(unsigned char key[], unsigned key_length)
 
     for (unsigned i = 0; i < c; i++)
     {
-        L[i] = (key[i * 4] << 24) | (key[i * 4] << 16) | (key[i * 4] << 8) | (key[i * 4]);
+        L[i] = LOAD32BE(key + i * 4);
     }
     S[0] = P;
 
@@ -90,27 +110,33 @@ void RC6::generate_keys(unsigned char key[], unsigned key_length)
     }
 }
 
-uint32_t LOAD32(unsigned char key[])
+void UPLOAD32BE(uint32_t data, unsigned char out[])
 {
-    uint32_t a = key[0];
-    uint32_t b = key[1];
-    uint32_t c = key[2];
-    uint32_t d = key[3];
+    out[0] = data >> 24;
+    out[1] = data >> 16 & 0xff;
+    out[2] = data >> 8 & 0xff;
+    out[3] = data & 0xff;
+}
 
-    return (a << 24) | (b << 16) | (c << 8) | (d);
+void UPLOAD32LE(uint32_t data, unsigned char out[])
+{
+    out[3] = data >> 24;
+    out[2] = data >> 16 & 0xff;
+    out[1] = data >> 8 & 0xff;
+    out[0] = data & 0xff;
 }
 
 void RC6::cipher(unsigned char in[], unsigned char out[])
 {
-    uint32_t A = LOAD32(in); 
-    uint32_t B = LOAD32(in + 4);
-    uint32_t C = LOAD32(in + 8);
-    uint32_t D = LOAD32(in + 12);
+    uint32_t A = LOAD32BE(in); 
+    uint32_t B = LOAD32BE(in + 4);
+    uint32_t C = LOAD32BE(in + 8);
+    uint32_t D = LOAD32BE(in + 12);
 
     B = B + S[0];
     D = D + S[1];
 
-    for (unsigned round = 0; round < number_of_rounds; round++)
+    for (unsigned round = 1; round <= number_of_rounds; round++)
     {
         uint32_t t = rotate_left(B * (2*B + 1), log_w);
         uint32_t u = rotate_left(D * (2*D + 1), log_w);
@@ -123,8 +149,13 @@ void RC6::cipher(unsigned char in[], unsigned char out[])
 
     A = A + S[2 * number_of_rounds + 2];
     C = C + S[2 * number_of_rounds + 3];
+
+    UPLOAD32LE(A, out);
+    UPLOAD32LE(B, out + 4);
+    UPLOAD32LE(C, out + 8);
+    UPLOAD32LE(D, out + 12);
 }
 
-void decipher(unsigned char in[], unsigned char out[])
+void RC6::decipher(unsigned char in[], unsigned char out[])
 {
 }
