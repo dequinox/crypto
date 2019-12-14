@@ -90,8 +90,39 @@ void RC6::generate_keys(unsigned char key[], unsigned key_length)
     }
 }
 
-void cipher(unsigned char in[], unsigned char out[])
+uint32_t LOAD32(unsigned char key[])
 {
+    uint32_t a = key[0];
+    uint32_t b = key[1];
+    uint32_t c = key[2];
+    uint32_t d = key[3];
+
+    return (a << 24) | (b << 16) | (c << 8) | (d);
+}
+
+void RC6::cipher(unsigned char in[], unsigned char out[])
+{
+    uint32_t A = LOAD32(in); 
+    uint32_t B = LOAD32(in + 4);
+    uint32_t C = LOAD32(in + 8);
+    uint32_t D = LOAD32(in + 12);
+
+    B = B + S[0];
+    D = D + S[1];
+
+    for (unsigned round = 0; round < number_of_rounds; round++)
+    {
+        uint32_t t = rotate_left(B * (2*B + 1), log_w);
+        uint32_t u = rotate_left(D * (2*D + 1), log_w);
+        A = rotate_left(A ^ t, u) + S[2 * round];
+        C = rotate_left(C ^ u, t) + S[2 * round + 1];
+
+        uint32_t temp = A;
+        A = B; B = C; C = D; D = temp;
+    }
+
+    A = A + S[2 * number_of_rounds + 2];
+    C = C + S[2 * number_of_rounds + 3];
 }
 
 void decipher(unsigned char in[], unsigned char out[])
