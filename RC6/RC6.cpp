@@ -4,6 +4,11 @@ RC6::RC6()
 {
 }
 
+RC6::~RC6()
+{
+    delete[] S;
+}
+
 void RC6::set_key(unsigned char key[], unsigned key_length)
 {
     generate_keys(key, key_length);
@@ -61,7 +66,15 @@ uint32_t RC6::rotate_left(uint32_t a, uint32_t b)
     return (a << b) | (a >> (w - b));
 }
 
-uint32_t LOAD32(unsigned char key[])
+uint32_t RC6::rotate_right(uint32_t a, uint32_t b)
+{
+    b <<= (w - log_w);
+    b >>= (w - log_w);
+
+    return (a >> b) | (a << (w - b));
+}
+
+uint32_t LOAD32BE(unsigned char key[])
 {
     uint32_t a = key[0];
     uint32_t b = key[1];
@@ -71,7 +84,7 @@ uint32_t LOAD32(unsigned char key[])
     return (a << 24) | (b << 16) | (c << 8) | (d);
 }
 
-uint32_t LOAD32BE(unsigned char key[])
+uint32_t LOAD32LE(unsigned char key[])
 {
     uint32_t a = key[0];
     uint32_t b = key[1];
@@ -89,7 +102,7 @@ void RC6::generate_keys(unsigned char key[], unsigned key_length)
 
     for (unsigned i = 0; i < c; i++)
     {
-        L[i] = LOAD32BE(key + i * 4);
+        L[i] = LOAD32LE(key + i * 4);
     }
     S[0] = P;
 
@@ -128,10 +141,10 @@ void UPLOAD32LE(uint32_t data, unsigned char out[])
 
 void RC6::cipher(unsigned char in[], unsigned char out[])
 {
-    uint32_t A = LOAD32BE(in); 
-    uint32_t B = LOAD32BE(in + 4);
-    uint32_t C = LOAD32BE(in + 8);
-    uint32_t D = LOAD32BE(in + 12);
+    uint32_t A = LOAD32LE(in); 
+    uint32_t B = LOAD32LE(in + 4);
+    uint32_t C = LOAD32LE(in + 8);
+    uint32_t D = LOAD32LE(in + 12);
 
     B = B + S[0];
     D = D + S[1];
@@ -158,4 +171,30 @@ void RC6::cipher(unsigned char in[], unsigned char out[])
 
 void RC6::decipher(unsigned char in[], unsigned char out[])
 {
+    uint32_t A = LOAD32LE(in); 
+    uint32_t B = LOAD32LE(in + 4);
+    uint32_t C = LOAD32LE(in + 8);
+    uint32_t D = LOAD32LE(in + 12);
+
+    C = C - S[2 * number_of_rounds + 3];
+    A = A - S[2 * number_of_rounds + 2];
+
+    for (unsigned round = number_of_rounds; round >= 1; round--)
+    {
+        uint32_t temp = D;
+        D = C; C = B; B = A; A = temp;
+
+        uint32_t u = rotate_left(D * (2 * D + 1), log_w);
+        uint32_t t = rotate_left(B * (2 * B + 1), log_w);
+        C = rotate_right(C - S[2 * round + 1], t) ^ u;
+        A = rotate_right(A - S[2 * round], u) ^ t;
+    }
+
+    D = D - S[1];
+    B = B - S[0];
+
+    UPLOAD32LE(A, out);
+    UPLOAD32LE(B, out + 4);
+    UPLOAD32LE(C, out + 8);
+    UPLOAD32LE(D, out + 12);
 }

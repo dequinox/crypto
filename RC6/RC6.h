@@ -7,6 +7,7 @@ class RC6
 {
     public:
         RC6();
+        ~RC6();
     
     public:
         void set_key(unsigned char key[], unsigned key_length);
@@ -20,6 +21,7 @@ class RC6
 
     private:
         uint32_t rotate_left(uint32_t a, uint32_t b);
+        uint32_t rotate_right(uint32_t a, uint32_t b);
 
     private:
         uint32_t* S;
