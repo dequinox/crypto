@@ -6,9 +6,9 @@
 - [x] DES
 - [x] AES
 - [x] BLOWFISH
+- [x] RC6
 
 ## Todo
 - [ ] IDEA
-- [ ] RC6
 - [ ] RSA
 - [ ] Add different block modes
